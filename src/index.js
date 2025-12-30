@@ -5,12 +5,24 @@ const cors = require("cors");
 const healthzRoutes = require("../routes/health.route");
 const pastesRoutes = require("../routes/paste.route")
 const Paste = require("../model/paste.model");
-const { getNow } = require("../utils/time")
+const { getNow } = require("../utils/time");
+
+const allowedOrigin = "https://pastebin-frontend.netlify.app/"
 
 
 app.use(express.urlencoded({ extended:true }));
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin : allowedOrigin,
+    methods: ["GET","POST","OPTIONS"],
+    allowedHeaders : ["Content-Type"]
+}));
+
+app.options("*", cors({
+    origin : allowedOrigin,
+    methods: ["GET","POST","OPTIONS"],
+    allowedHeaders : ["Content-Type"]
+}))
 
 app.use("/api/healthz", healthzRoutes);
 app.use("/api/pastes", pastesRoutes)
