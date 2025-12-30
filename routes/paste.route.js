@@ -5,31 +5,44 @@ const { getNow } = require("../utils/time");
 
 const router = express.Router();
 
-router.post("/", async (req,res) => {
+router.post("/", async (req, res) => {
+  try {
     const { content, ttl_seconds, max_views } = req.body;
 
-    if(!content || typeof content !== "string" || !content.trim()){
-        return res.status(400).json({ error: "Invalid content"});
+    if (!content || typeof content !== "string" || !content.trim()) {
+      return res.status(400).json({ error: "Invalid content" });
     }
-    if(ttl_seconds !== undefined && ttl_seconds < 1 ){
-        return res.status(400).json({ error: "Invalid ttl_seconds"});
+    if (ttl_seconds !== undefined && ttl_seconds < 1) {
+      return res.status(400).json({ error: "Invalid ttl_seconds" });
     }
-    if(max_views !== undefined && max_views < 1 ){
-        return res.status(400).json({ error: "Invalid max_views"});
+    if (max_views !== undefined && max_views < 1) {
+      return res.status(400).json({ error: "Invalid max_views" });
     }
 
     const id = nanoid();
-    
-    const expiresAt = ttl_seconds ? new Date(Date.now() + ttl_seconds*1000 ) : null;
+    const expiresAt = ttl_seconds
+      ? new Date(Date.now() + ttl_seconds * 1000)
+      : null;
 
     await Paste.create({
-        _id: id,
-        content,
-        expiresAt,
-        maxViews: max_views ?? null
-    })
-    res.status(201).json({ id, url: `${process.env.BASE_URL}/p/${id}`})
-})
+      _id: id,
+      content,
+      expiresAt,
+      maxViews: max_views ?? null
+    });
+
+    const baseUrl = process.env.BASE_URL || "http://localhost:10000";
+
+
+    res.status(201).json({
+      id,
+      url: `${baseUrl}/p/${id}`
+    });
+  } catch (error) {
+    console.error("Paste create error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 
 router.get("/:id", async (req, res) => {
